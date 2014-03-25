@@ -12,6 +12,14 @@ my $empty_graph = {
     },
 };
 
+my $hub_graph = {
+    vertices => [qw/ a b c d e /],
+    edges => sub {
+	my (undef, $vertex) = @_;
+	return $vertex eq 'a';
+    },
+};
+
 sub set_intersection {
     my ($a, $b) = @_;
     my %accum;
@@ -47,3 +55,4 @@ sub print_results {
 
 print_results(Complete => $complete_graph);
 print_results(Empty => $empty_graph);
+print_results(Hub => $hub_graph);
