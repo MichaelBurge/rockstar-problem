@@ -53,6 +53,10 @@ sub set_intersection {
 }
 
 sub find_rockstars {
+    find_rockstars_brute_force(@_)
+}
+
+sub find_rockstars_brute_force {
     my ($graph) = @_;
 
     my @vertices = @{ $graph->{vertices} };
