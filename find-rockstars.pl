@@ -1,3 +1,5 @@
+use strict;
+
 my $complete_graph = {
     vertices => [qw/ a b c d e /],
     edges => sub {
@@ -20,6 +22,27 @@ my $hub_graph = {
     },
 };
 
+# Complete graph except that:
+# * a is connected to every vertex(a is a rockstar)
+# * Every other vertex has exactly 1 missing connection
+my @froms = split //, "abcdefghijklmnopqrstuvwxyz";
+my @tos = split //,    "bcdefghijklmnopqrstuvwxyz";
+my $almost_complete_graph = sub {
+    my ($n) = @_;
+    my @indices = (0..$n-1);
+    my %missings =
+	map { $froms[$_] => $tos[$_] }
+          @indices;
+    return {
+	vertices => [ @froms[@indices] ],
+	edges => sub {
+	    my ($a, $b) = @_;
+	    return 0 if $b eq $missings{$a};
+	    return 1;
+	},
+    };
+};
+
 sub set_intersection {
     my ($a, $b) = @_;
     my %accum;
@@ -32,19 +55,16 @@ sub set_intersection {
 sub find_rockstars {
     my ($graph) = @_;
 
-    my %maybe_rockstars;
-    my %not_munchkins = map { $_ => 1 } @{ $graph->{vertices} };
-    for my $v1 (@{ $graph->{vertices} }) {
-	for my $v2 (keys %not_munchkins) {
-	    if ($graph->{edges}->($v1, $v2)) {
-		$maybe_rockstars{$v2} = 1;
-	    } else {
-		undef $not_munchkins{$v2};
+    my @vertices = @{ $graph->{vertices} };
+    my %popular = map { $_ => 1 } @vertices;
+    for my $v1 (@vertices) {
+	for my $v2 (@vertices) {
+	    if (!($graph->{edges}->($v1, $v2))) {
+		delete $popular{$v2};
 	    }
 	}
     }
-    my %rockstars = set_intersection(\%maybe_rockstars, \%not_munchkins);
-    return keys %rockstars;
+    return keys %popular;
 }
 
 sub print_results {
@@ -53,6 +73,22 @@ sub print_results {
     print "\n";
 }
 
+sub print_graph {
+    my ($graph) = @_;
+    my @vertices = @{ $graph->{vertices} };
+    print "Vertices: " . join(',', @vertices) . "\n";
+    print "Edges:\n";
+    for my $a (@vertices) {
+	for my $b (@vertices) {
+	    next unless $graph->{edges}->($a, $b);
+	    print "$a|$b\n";
+	}
+    }
+}
+
 print_results(Complete => $complete_graph);
 print_results(Empty => $empty_graph);
 print_results(Hub => $hub_graph);
+print_results(Almost => $almost_complete_graph->(5));
+
+#print_graph($almost_complete_graph->(5));
